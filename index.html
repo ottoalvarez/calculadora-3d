@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Costos de Impresión 3D (CLP)</title>
+    <!-- Carga de Tailwind CSS para un estilo moderno y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos personalizados para la interfaz */
+        :root {
+            --primary-color: #059669;
+            /* emerald-600 */
+            --secondary-color: #3B82F6;
+            /* blue-500 */
+            --bg-light: #F9FAFB;
+            --text-dark: #1F2937;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container-card {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 1.5rem;
+            /* rounded-3xl */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            padding: 2.5rem;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .input-group input,
+        .input-group select {
+            border: 1px solid #D1D5DB;
+            /* gray-300 */
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            /* rounded-lg */
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+            /* blue-300 shadow */
+            outline: none;
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        #results-card {
+            background-color: #F3F4F6;
+            /* gray-100 */
+            border: 2px solid var(--primary-color);
+            padding: 1.5rem;
+            border-radius: 1rem;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #E5E7EB;
+        }
+
+        .result-item.total-final {
+            border-top: 2px solid var(--primary-color);
+            border-bottom: none;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .result-label {
+            font-weight: 600;
+        }
+
+        @media (min-width: 768px) {
+            .input-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container-card">
+        <h1 class="text-4xl font-extrabold text-center mb-6 text-green-700">
+            💰 Calculadora de Costos de Impresión 3D (CLP)
+        </h1>
+        <p class="text-center text-gray-600 mb-8">Calcula el costo total (NETO + IVA) de tu proyecto, incluyendo
+            material, electricidad y valor de tu trabajo.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Columna de Material y Tiempo -->
+            <div class="md:col-span-2">
+                <h2 class="section-title">Datos del Modelo y Material</h2>
+                <div class="grid input-grid gap-6 mb-6">
+                    <!-- 1. Peso del Modelo -->
+                    <div class="input-group">
+                        <label for="weight">Peso del Modelo (gramos):</label>
+                        <input type="number" id="weight" value="50.00" min="0.01" step="0.01" placeholder="Ej: 19.95"
+                            class="mt-1">
+                    </div>
+                    <!-- 2. Costo del Filamento (kg) -->
+                    <div class="input-group">
+                        <label for="filamentCost">Costo del Filamento (CLP/kg):</label>
+                        <input type="number" id="filamentCost" value="15000" min="1000" placeholder="Ej: 15000"
+                            class="mt-1">
+                    </div>
+                    <!-- 3. Cantidad de Piezas -->
+                    <div class="input-group">
+                        <label for="quantity">Cantidad de Piezas:</label>
+                        <input type="number" id="quantity" value="1" min="1" step="1" placeholder="Ej: 5" class="mt-1">
+                    </div>
+                    <!-- 4. Horas y Minutos de Impresión -->
+                    <div class="input-group col-span-2 md:col-span-1">
+                        <label>Tiempo por Pieza (Horas y Minutos):</label>
+                        <div class="flex space-x-4 mt-1">
+                            <div class="w-1/2">
+                                <input type="number" id="printHours" value="5" min="0" step="1" placeholder="Horas"
+                                    class="mt-1">
+                            </div>
+                            <div class="w-1/2">
+                                <input type="number" id="printMinutes" value="0" min="0" max="59" step="1"
+                                    placeholder="Minutos" class="mt-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="section-title">Costo de Operación, Amortización y Ensamble</h2>
+                <div class="grid input-grid gap-6 mb-6">
+                    <!-- 5. Costo de Mano de Obra (Ensamblaje/Maquila) -->
+                    <div class="input-group">
+                        <label for="laborCostPerHour">Costo de Mano de Obra (CLP/hora):</label>
+                        <input type="number" id="laborCostPerHour" value="5000" min="0" placeholder="Ej: 5000"
+                            class="mt-1">
+                    </div>
+                    <!-- 6. Tiempo de Ensamblaje Manual (Horas) -->
+                    <div class="input-group">
+                        <label for="assemblyHours">Tiempo de Ensamblaje/Maquila (Horas):</label>
+                        <input type="number" id="assemblyHours" value="0.5" min="0" step="0.1"
+                            placeholder="Ej: 0.5 (30 minutos)" class="mt-1">
+                    </div>
+                    <!-- 7. Fondo de Inversión y Riesgo (Amortización, %) -->
+                    <div class="input-group">
+                        <label for="investmentFund">Fondo de Inversión y Riesgo (%):</label>
+                        <input type="number" id="investmentFund" value="15" min="0" step="1" max="100"
+                            placeholder="Ej: 15" class="mt-1">
+                    </div>
+                    <!-- 8. Otros Costos Fijos (CLP) -->
+                    <div class="input-group">
+                        <label for="fixedCost">Otros Costos Fijos (CLP):</label>
+                        <input type="number" id="fixedCost" value="100" min="0"
+                            placeholder="Ej: 100 (limpieza, bolsas, etc.)" class="mt-1">
+                    </div>
+                    <!-- 9. Margen de Ganancia y Valor Diseño (Apreciativo, %) -->
+                    <div class="input-group">
+                        <label for="profitMargin">Margen de Ganancia y Valor Diseño (%):</label>
+                        <input type="number" id="profitMargin" value="40" min="0" step="1" max="500"
+                            placeholder="Ej: 40" class="mt-1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna de Resultados -->
+            <div class="md:col-span-1">
+                <h2 class="section-title">Resultados del Cálculo</h2>
+                <div id="results-card" class="space-y-2">
+                    <div class="result-item">
+                        <span class="result-label text-blue-600">Costo de Material (PLA)</span>
+                        <span id="costMaterial">CLP 0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label text-blue-600">Costo Eléctrico de Impresión</span>
+                        <span id="costElectric">CLP 0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label text-blue-600">Costo Fijo (Otros)</span>
+                        <span id="costFixed">CLP 0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label text-blue-600">Costo Mano de Obra (Ensamble)</span>
+                        <span id="costLabor">CLP 0</span>
+                    </div>
+                    <div class="result-item border-t-2 border-gray-400 pt-2">
+                        <span class="result-label text-gray-700">SUBTOTAL Neto Base (x1)</span>
+                        <span id="subtotalNetoBase" class="text-gray-700 font-bold">CLP 0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label text-orange-600">Fondo Inversión y Riesgo (15%)</span>
+                        <span id="costInvestment">CLP 0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label text-orange-600">Margen de Ganancia (40%)</span>
+                        <span id="costProfit">CLP 0</span>
+                    </div>
+                    <!-- Separador de subtotal -->
+                    <div class="result-item !text-base !font-normal border-t-2 border-gray-300 pt-2">
+                        <span class="result-label text-gray-700">COSTO NETO TOTAL (x Cantidad)</span>
+                        <span id="costNetoTotal" class="text-gray-700 font-extrabold">CLP 0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label text-red-600">IVA (19%)</span>
+                        <span id="costIva">CLP 0</span>
+                    </div>
+                    <!-- TOTAL FINAL -->
+                    <div class="result-item total-final">
+                        <span class="result-label">PRECIO VENTA FINAL (CLP)</span>
+                        <span id="costTotal">CLP 0</span>
+                    </div>
+                </div>
+                <p id="electric-note" class="text-xs text-gray-600 mt-4 text-center">
+                    Potencia de la impresora: **0.35 kW**. Tarifa eléctrica conservadora: **CLP 235,10/kWh**.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Valores Fijos y Constantes ---
+
+        // Potencia Nominal de la Ender 3 V3 SE (kW)
+        const PRINTER_POWER_KW = 0.35; // 350W
+
+        // Tarifa Eléctrica Fija (CLP/kWh): Valor conservador (el más alto de la tabla ENEL)
+        const FIXED_ELECTRIC_RATE_CLP_PER_KWH = 235.10; // CLP/kWh
+
+        // Impuesto al Valor Agregado (IVA) en Chile
+        const IVA_RATE = 0.19; // 19%
+
+        // --- Funciones de Cálculo ---
+
+        /**
+         * Formatea un número como moneda chilena (CLP).
+         * @param {number} amount - El monto a formatear.
+         * @returns {string} El monto formateado.
+         */
+        function formatCLP(amount) {
+            // Redondea al peso más cercano
+            const roundedAmount = Math.round(amount);
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                minimumFractionDigits: 0
+            }).format(roundedAmount);
+        }
+
+        /**
+         * Función principal para calcular el costo.
+         */
+        function calculateCost() {
+            // 1. Obtener valores de los campos de entrada
+            const weightGrams = parseFloat(document.getElementById('weight').value) || 0;
+            const filamentCostKg = parseFloat(document.getElementById('filamentCost').value) || 0;
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            const printHours = parseFloat(document.getElementById('printHours').value) || 0;
+            const printMinutes = parseFloat(document.getElementById('printMinutes').value) || 0;
+            const laborCostPerHour = parseFloat(document.getElementById('laborCostPerHour').value) || 0;
+            const assemblyHours = parseFloat(document.getElementById('assemblyHours').value) || 0;
+            const investmentFundPercentage = parseFloat(document.getElementById('investmentFund').value) || 0;
+            const profitMarginPercentage = parseFloat(document.getElementById('profitMargin').value) || 0;
+            const fixedCost = parseFloat(document.getElementById('fixedCost').value) || 0;
+
+            // Validaciones de tiempo y cantidad
+            const totalPrintHoursPerPiece = printHours + (printMinutes / 60);
+
+            if (weightGrams <= 0 || filamentCostKg <= 0 || totalPrintHoursPerPiece <= 0 || quantity < 1) {
+                // Dejar resultados en 0 si los valores críticos son cero o negativos
+                const zeroCLP = formatCLP(0);
+                document.getElementById('costMaterial').textContent = zeroCLP;
+                document.getElementById('costElectric').textContent = zeroCLP;
+                document.getElementById('costLabor').textContent = zeroCLP;
+                document.getElementById('costFixed').textContent = zeroCLP;
+                document.getElementById('subtotalNetoBase').textContent = zeroCLP;
+                document.getElementById('costInvestment').textContent = zeroCLP;
+                document.getElementById('costProfit').textContent = zeroCLP;
+                document.getElementById('costNetoTotal').textContent = zeroCLP;
+                document.getElementById('costIva').textContent = zeroCLP;
+                document.getElementById('costTotal').textContent = zeroCLP;
+                return;
+            }
+
+            // --- 2. Costos de Ejecución POR PIEZA (Costo Directo) ---
+
+            // 2.1. Costo de Material (PLA) por pieza
+            const costPerGram = filamentCostKg / 1000;
+            const costMaterialPerPiece = costPerGram * weightGrams;
+
+            // 2.2. Costo Eléctrico por pieza
+            // Consumo total de la impresión (kWh) = Potencia (kW) * Horas
+            const totalKwhPerPiece = totalPrintHoursPerPiece * PRINTER_POWER_KW;
+            // Costo eléctrico por pieza = Consumo (kWh) * Tarifa (CLP/kWh)
+            const costElectricPerPiece = totalKwhPerPiece * FIXED_ELECTRIC_RATE_CLP_PER_KWH;
+
+            // 2.3. Costo de Mano de Obra (Ensamblaje/Maquila)
+            const costLaborPerPiece = laborCostPerHour * assemblyHours;
+
+            // 2.4. Suma de Costos Directos (NETO Base x1)
+            const subtotalNetoBase = costMaterialPerPiece + costElectricPerPiece + costLaborPerPiece + fixedCost;
+
+
+            // --- 3. Fondos y Márgenes (Aplicados al NETO Base x1) ---
+
+            // 3.1. Fondo de Inversión y Riesgo (Amortización / Ingreso Interno)
+            const costInvestment = subtotalNetoBase * (investmentFundPercentage / 100);
+
+            // 3.2. Margen de Ganancia y Valor Diseño (Valor Apreciativo)
+            const costProfit = (subtotalNetoBase + costInvestment) * (profitMarginPercentage / 100);
+
+            // --- 4. Costo Neto Total del Lote (x Cantidad) ---
+            const costNetoPerPiece = subtotalNetoBase + costInvestment + costProfit;
+            const costNetoTotal = costNetoPerPiece * quantity;
+
+            // --- 5. IVA y Precio Final de Venta ---
+            const costIva = costNetoTotal * IVA_RATE;
+            const costTotal = costNetoTotal + costIva;
+
+            // --- 6. Actualizar la Interfaz ---
+            document.getElementById('costMaterial').textContent = formatCLP(costMaterialPerPiece);
+            document.getElementById('costElectric').textContent = formatCLP(costElectricPerPiece);
+            document.getElementById('costLabor').textContent = formatCLP(costLaborPerPiece);
+            document.getElementById('costFixed').textContent = formatCLP(fixedCost);
+            document.getElementById('subtotalNetoBase').textContent = formatCLP(subtotalNetoBase);
+            document.getElementById('costInvestment').textContent = formatCLP(costInvestment);
+            document.getElementById('costProfit').textContent = formatCLP(costProfit);
+            document.getElementById('costNetoTotal').textContent = formatCLP(costNetoTotal);
+            document.getElementById('costIva').textContent = formatCLP(costIva);
+            document.getElementById('costTotal').textContent = formatCLP(costTotal);
+
+            // Actualizar valores fijos en la nota
+            document.getElementById('electric-note').innerHTML = `
+            Potencia de la impresora: **${PRINTER_POWER_KW} kW**. Tarifa eléctrica conservadora: **CLP ${FIXED_ELECTRIC_RATE_CLP_PER_KWH}/kWh**.
+        `;
+        }
+
+        // --- Inicialización y Event Listeners ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                // Agregar listener para calcular en cada cambio
+                input.addEventListener('input', calculateCost);
+            });
+
+            // Inicializar el cálculo al cargar la página con los valores por defecto
+            calculateCost();
+        });
+    </script>
+
+</body>
+
+</html>
